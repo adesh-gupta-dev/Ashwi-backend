@@ -2,9 +2,14 @@ const trim = value => (value || '').trim().replace(/\/+$/, '');
 
 export function oauthConfig(env = process.env) {
   const api = trim(env.OAUTH_PUBLIC_API_URL || env.API_BASE_URL || `http://localhost:${env.PORT || 5000}`);
-  const frontend = trim(env.FRONTEND_PUBLIC_URL || env.CLIENT_URL || 'http://localhost:3000');
-  const redirectUris = (env.OAUTH_REDIRECT_URIS || `${frontend}/oauth/callback`)
-    .split(',').map(value => value.trim()).filter(Boolean);
+  const frontend = trim(env.NODE_ENV === 'production'
+    ? 'https://chatwithashwi.vercel.app'
+    : env.FRONTEND_PUBLIC_URL || env.CLIENT_URL || 'http://localhost:3000');
+  const redirectUris = [...new Set([
+    ...(`${frontend}/oauth/callback`).split(',').map(value => value.trim()).filter(Boolean),
+    'https://chatwithashwi.vercel.app/oauth/callback',
+    ...(env.OAUTH_REDIRECT_URIS || '').split(',').map(value => value.trim()).filter(Boolean),
+  ])];
   return {
     redirectUris,
     providers: {

@@ -89,7 +89,9 @@ const signup = asyncHandler(async (req, res) => {
 // @access  Public
 const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
-  const frontendBase = (process.env.CLIENT_URL || process.env.FRONTEND_PUBLIC_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  const frontendBase = (process.env.NODE_ENV === 'production'
+    ? 'https://chatwithashwi.vercel.app'
+    : process.env.CLIENT_URL || process.env.FRONTEND_PUBLIC_URL || 'http://localhost:3000').replace(/\/+$/, '');
   const redirect = (status) => res.redirect(303, `${frontendBase}/verify-email?status=${status}`);
 
   if (typeof token !== 'string' || !token) return redirect('invalid');

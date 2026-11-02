@@ -13,6 +13,7 @@ import subscriptionRoutes from './routes/subscriptionRoutes.js';
 
 const app = express();
 const allowedOrigins = [
+  'https://chatwithashwi.vercel.app',
   'https://ashwifontend.vercel.app',
   process.env.CORS_ORIGIN,
   process.env.FRONTEND_PUBLIC_URL,

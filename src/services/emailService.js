@@ -61,7 +61,9 @@ const sendPasswordResetEmail = async (to, token) => {
       throw new Error('SMTP credentials missing. Set SMTP_USER/SMTP_PASSWORD (or SMTP_MAIL/SMTP_PASS).');
     }
 
-    const frontendBase = process.env.CLIENT_URL || process.env.FRONTEND_PUBLIC_URL || 'http://localhost:3000';
+    const frontendBase = process.env.NODE_ENV === 'production'
+      ? 'https://chatwithashwi.vercel.app'
+      : process.env.CLIENT_URL || process.env.FRONTEND_PUBLIC_URL || 'http://localhost:3000';
     const resetUrl = `${frontendBase.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
     const html = await loadTemplate('reset-password.html', { resetUrl, year: new Date().getFullYear() });
 

@@ -47,7 +47,7 @@ The default local API origin is `http://localhost:5000`; routes are mounted unde
 
 ## Environment configuration
 
-- `DATABASE_URL` configures PostgreSQL. Individual `DB_*` settings are also supported.
+- `DATABASE_URL` configures PostgreSQL. The provider aliases `database_DATABASE_URL`, `database_POSTGRES_URL`, and `database_PRISMA_DATABASE_URL` are accepted when `DATABASE_URL` is absent. Individual `DB_*` settings are also supported.
 - `JWT_SECRET` must be replaced with a long random secret. `JWT_EXPIRATION` sets the token lifetime.
 - `GEMINI_API_KEY` configures AI chat; `GEMINI_MODEL` selects the Gemini model.
 - `SMTP_*` settings configure verification and password-reset email.

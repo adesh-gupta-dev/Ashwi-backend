@@ -3,15 +3,19 @@ import logger from '../utils/logger.js';
 import { getDatabaseTarget } from './databaseDiagnostics.js';
 
 const buildPoolConfig = () => {
+  const databaseUrl = process.env.DATABASE_URL
+    || process.env.database_DATABASE_URL
+    || process.env.database_POSTGRES_URL
+    || process.env.database_PRISMA_DATABASE_URL;
   const common = {
     max: Number(process.env.DB_CONNECTION_LIMIT || 10),
     idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
     connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT_MS || 10000),
   };
 
-  if (process.env.DATABASE_URL) {
+  if (databaseUrl) {
     return {
-      connectionString: process.env.DATABASE_URL,
+      connectionString: databaseUrl,
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
       ...common,
     };

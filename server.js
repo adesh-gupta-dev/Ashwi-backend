@@ -6,6 +6,7 @@ import { describeDatabaseFailure } from "./src/config/databaseDiagnostics.js";
 import { initializeDatabase } from "./src/models/initDb.js";
 
 const PORT = process.env.PORT || 3000;
+const isVercel = process.env.VERCEL === '1';
 
 const startServer = async () => {
   let isConnected = false;
@@ -29,14 +30,20 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Vercel imports the Express app as a serverless function. Keep the explicit
+// database check and listener for local development only.
+if (!isVercel) {
+  startServer();
 
-process.on("unhandledRejection", (err) => {
-  logger.error(`Unhandled Rejection: ${err.message}`, { stack: err.stack });
-  process.exit(1);
-});
+  process.on("unhandledRejection", (err) => {
+    logger.error(`Unhandled Rejection: ${err.message}`, { stack: err.stack });
+    process.exit(1);
+  });
 
-process.on("uncaughtException", (err) => {
-  logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
-  process.exit(1);
-});
+  process.on("uncaughtException", (err) => {
+    logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
+    process.exit(1);
+  });
+}
+
+export default app;

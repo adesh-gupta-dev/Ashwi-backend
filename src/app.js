@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
+import { initializeDatabase } from './models/initDb.js';
 
 const app = express();
 const allowedOrigins = [
@@ -83,6 +84,28 @@ app.use(
 // Basic health-check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
+});
+
+let databaseInitialization;
+app.use('/api', async (req, res, next) => {
+  // Provider configuration is public and independent of PostgreSQL. Let the
+  // auth screen load even while the database is unavailable.
+  if (process.env.VERCEL !== '1' || req.path === '/auth/oauth/providers') return next();
+
+  if (!databaseInitialization) {
+    databaseInitialization = initializeDatabase().catch((error) => {
+      databaseInitialization = undefined;
+      throw error;
+    });
+  }
+
+  try {
+    await databaseInitialization;
+    next();
+  } catch (error) {
+    logger.error('Vercel database initialization failed', { message: error.message, code: error.code });
+    res.status(503).json({ success: false, error: 'Ashwi is temporarily unavailable. Please try again shortly.' });
+  }
 });
 
 // Rate Limiting

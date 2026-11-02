@@ -37,28 +37,27 @@ const allowedDomains = [...new Set(configuredOrigins.map((value) => {
 
 const corsOptions = {
   credentials: true,
-  origin(origin, callback) {
+  origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
     try {
       const hostname = new URL(origin).hostname.replace(/^www\./, '').toLowerCase();
-      const isAllowed = allowedDomains.some((domain) =>
-        hostname === domain || hostname.endsWith(`.${domain}`));
+      const isAllowed = allowedDomains.some((domain) => {
+        const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+        return hostname === cleanDomain || hostname.endsWith(`.${cleanDomain}`);
+      });
 
       if (isAllowed) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
-    } catch {
+    } catch (error) {
       return callback(new Error('Invalid origin'));
     }
   },
-  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 // Security Middlewares
 app.use(helmet());
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
 
 // Body parsing
 app.use(express.json());

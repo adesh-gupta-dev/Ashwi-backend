@@ -3,9 +3,11 @@ import logger from '../utils/logger.js';
 import { getDatabaseTarget } from './databaseDiagnostics.js';
 
 const buildPoolConfig = () => {
-  // DATABASE_URL is the app's explicit deployment setting; fall back to
-  // provider-specific aliases when it is not configured.
-  const databaseUrl = process.env.DATABASE_URL
+  // Prefer the managed Postgres pooled URLs used by Vercel integrations. A
+  // stale generic DATABASE_URL must not override the active hosted database.
+  const databaseUrl = process.env.DATABASE_POSTGRES_URL
+    || process.env.DATABASE_POSTGRES_PRISMA_URL
+    || process.env.DATABASE_URL
     || process.env.database_DATABASE_URL
     || process.env.database_POSTGRES_URL
     || process.env.database_PRISMA_DATABASE_URL;

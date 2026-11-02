@@ -3,12 +3,12 @@ import logger from '../utils/logger.js';
 import { getDatabaseTarget } from './databaseDiagnostics.js';
 
 const buildPoolConfig = () => {
-  // Prefer the provider-injected Prisma aliases over a possibly stale generic
-  // DATABASE_URL left in the Vercel project settings.
-  const databaseUrl = process.env.database_DATABASE_URL
+  // DATABASE_URL is the app's explicit deployment setting; fall back to
+  // provider-specific aliases when it is not configured.
+  const databaseUrl = process.env.DATABASE_URL
+    || process.env.database_DATABASE_URL
     || process.env.database_POSTGRES_URL
-    || process.env.database_PRISMA_DATABASE_URL
-    || process.env.DATABASE_URL;
+    || process.env.database_PRISMA_DATABASE_URL;
   const common = {
     max: Number(process.env.DB_CONNECTION_LIMIT || 10),
     idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
@@ -16,9 +16,21 @@ const buildPoolConfig = () => {
   };
 
   if (databaseUrl) {
+    let isSupabaseUrl = false;
+    try {
+      const hostname = new URL(databaseUrl).hostname;
+      isSupabaseUrl = hostname.endsWith('.supabase.co')
+        || hostname.endsWith('.pooler.supabase.com');
+    } catch {
+      // Let pg report malformed connection strings through the normal startup diagnostics.
+    }
+
     return {
       connectionString: databaseUrl,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+      // Supabase requires TLS; enable it for Supabase URLs even when the URL omits sslmode.
+      ssl: process.env.DB_SSL === 'true' || isSupabaseUrl
+        ? { rejectUnauthorized: false }
+        : undefined,
       ...common,
     };
   }

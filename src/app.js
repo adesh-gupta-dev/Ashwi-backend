@@ -12,7 +12,13 @@ import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 
 const app = express();
-const allowedOrigins = [process.env.CORS_ORIGIN, process.env.FRONTEND_PUBLIC_URL, process.env.FRONTEND_ORIGIN, process.env.FRONTEND_URL]
+const allowedOrigins = [
+  'https://ashwifontend.vercel.app',
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_PUBLIC_URL,
+  process.env.FRONTEND_ORIGIN,
+  process.env.FRONTEND_URL,
+]
   .flatMap((value) => (value || '').split(','))
   .map((origin) => origin.trim())
   .filter(Boolean);

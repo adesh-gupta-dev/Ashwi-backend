@@ -13,7 +13,7 @@ import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { initializeDatabase } from './models/initDb.js';
 
 const app = express();
-const allowedOrigins = [
+const configuredOrigins = [
   'https://chatwithashwi.vercel.app',
   'https://ashwifontend.vercel.app',
   process.env.CORS_ORIGIN,
@@ -25,38 +25,31 @@ const allowedOrigins = [
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-function escapeForRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function matchesOriginPattern(origin, pattern) {
-  if (pattern === '*') {
-    return true;
+const allowedDomains = [...new Set(configuredOrigins.map((value) => {
+  const normalized = value.replace(/^\*\./, '').toLowerCase();
+  try {
+    const withProtocol = normalized.includes('://') ? normalized : `https://${normalized}`;
+    return new URL(withProtocol).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
   }
-
-  if (!pattern.includes('*')) {
-    return origin === pattern;
-  }
-
-  const regex = new RegExp(`^${escapeForRegExp(pattern).replace(/\\\*/g, '.*')}$`);
-  return regex.test(origin);
-}
-
-function isAllowedOrigin(origin) {
-  if (!origin) {
-    return true;
-  }
-
-  if (allowedOrigins.length === 0) {
-    return process.env.NODE_ENV !== 'production';
-  }
-
-  return allowedOrigins.some((pattern) => matchesOriginPattern(origin, pattern));
-}
+}).filter(Boolean))];
 
 const corsOptions = {
+  credentials: true,
   origin(origin, callback) {
-    callback(null, isAllowedOrigin(origin));
+    if (!origin) return callback(null, true);
+
+    try {
+      const hostname = new URL(origin).hostname.replace(/^www\./, '').toLowerCase();
+      const isAllowed = allowedDomains.some((domain) =>
+        hostname === domain || hostname.endsWith(`.${domain}`));
+
+      if (isAllowed) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    } catch {
+      return callback(new Error('Invalid origin'));
+    }
   },
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

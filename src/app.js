@@ -11,6 +11,8 @@ import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { initializeDatabase } from './models/initDb.js';
+import { databaseTarget } from './config/db.js';
+import { describeDatabaseFailure } from './config/databaseDiagnostics.js';
 
 const app = express();
 const configuredOrigins = [
@@ -95,7 +97,7 @@ app.use('/api', async (req, res, next) => {
     await databaseInitialization;
     next();
   } catch (error) {
-    logger.error('Vercel database initialization failed', { message: error.message, code: error.code });
+    logger.error(`Vercel database initialization failed: ${describeDatabaseFailure(error, databaseTarget)}`);
     res.status(503).json({ success: false, error: 'Ashwi is temporarily unavailable. Please try again shortly.' });
   }
 });

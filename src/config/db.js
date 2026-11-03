@@ -30,9 +30,9 @@ const buildPoolConfig = () => {
 
     return {
       connectionString: normalizeDatabaseSsl(databaseUrl),
-      // Supabase requires TLS; enable it for Supabase URLs even when the URL omits sslmode.
+      // Supabase's URL includes its CA and verified TLS settings.
       ssl: process.env.DB_SSL === 'true' || isSupabaseUrl
-        ? { rejectUnauthorized: false }
+        ? { rejectUnauthorized: true }
         : undefined,
       ...common,
     };

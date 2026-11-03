@@ -20,6 +20,7 @@ test('production provider callbacks ignore stale localhost configuration', () =>
 });
 
 test('production uses the first valid public API URL and local development retains localhost', () => {
+ assert.equal(oauthConfig({NODE_ENV:'production', API_BASE_URL:'https://ashwiapi.vercel.app/api/'}).providers.google.callback, 'https://ashwiapi.vercel.app/api/auth/oauth/google/callback');
  assert.equal(oauthConfig({NODE_ENV:'production', OAUTH_PUBLIC_API_URL:'http://localhost:5000', API_BASE_URL:'https://api.example.com/'}).providers.google.callback, 'https://api.example.com/api/auth/oauth/google/callback');
  assert.equal(oauthConfig({NODE_ENV:'production', OAUTH_PUBLIC_API_URL:'https://oauth.example.com', API_BASE_URL:'https://api.example.com'}).providers.google.callback, 'https://oauth.example.com/api/auth/oauth/google/callback');
  assert.equal(oauthConfig({PORT:'5000'}).providers.google.callback, 'http://localhost:5000/api/auth/oauth/google/callback');

@@ -1,9 +1,10 @@
 const trim = value => (value || '').trim().replace(/\/+$/, '');
+const apiRoot = value => trim(value).replace(/\/api$/i, '');
 
 function publicApiUrl(env) {
   const candidates = [env.OAUTH_PUBLIC_API_URL, env.API_BASE_URL, env.BACKEND_PUBLIC_URL];
   if (env.NODE_ENV !== 'production' && env.VERCEL !== '1') {
-    return trim(candidates.find(value => value?.trim()) || `http://localhost:${env.PORT || 5000}`);
+    return apiRoot(candidates.find(value => value?.trim()) || `http://localhost:${env.PORT || 5000}`);
   }
   // Local .env values are sometimes copied into Vercel. Provider callbacks
   // must return to the deployed broker, never the visitor's localhost.
@@ -13,7 +14,7 @@ function publicApiUrl(env) {
       const host = url.hostname.toLowerCase();
       if (url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
         && host !== 'localhost' && !host.endsWith('.localhost') && !host.startsWith('127.') && host !== '[::1]') {
-        return trim(url.href);
+        return apiRoot(url.href);
       }
     } catch { /* Try the next configured public URL. */ }
   }

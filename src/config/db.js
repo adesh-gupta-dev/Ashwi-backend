@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import logger from '../utils/logger.js';
 import { getDatabaseTarget } from './databaseDiagnostics.js';
+import { normalizeDatabaseSsl } from './databaseSsl.js';
 
 const buildPoolConfig = () => {
   // Prefer the managed Postgres pooled URLs used by Vercel integrations. A
@@ -28,7 +29,7 @@ const buildPoolConfig = () => {
     }
 
     return {
-      connectionString: databaseUrl,
+      connectionString: normalizeDatabaseSsl(databaseUrl),
       // Supabase requires TLS; enable it for Supabase URLs even when the URL omits sslmode.
       ssl: process.env.DB_SSL === 'true' || isSupabaseUrl
         ? { rejectUnauthorized: false }

@@ -4,6 +4,13 @@ import { getDatabaseTarget, describeDatabaseFailure } from '../src/config/databa
 
 const target = { host: 'localhost', port: 5432, user: 'app_user', database: 'ashwi_chat' };
 
+test('TLS failures identify certificate recovery without leaking the raw error', () => {
+  const message = describeDatabaseFailure({ code: 'SELF_SIGNED_CERT_IN_CHAIN', message: 'private-password' }, target);
+  assert.match(message, /TLS certificate verification failed/);
+  assert.match(message, /sslrootcert/);
+  assert.doesNotMatch(message, /private-password/);
+});
+
 test('aggregate connection errors identify the actual listening-address failure', () => {
   const error = new AggregateError([Object.assign(new Error(), { code: 'ECONNREFUSED' })]);
   assert.match(describeDatabaseFailure(error, { ...target, port: 3307 }), /localhost:3307/);

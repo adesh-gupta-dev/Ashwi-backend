@@ -20,6 +20,9 @@ export function describeDatabaseFailure(error, target) {
   const code = error?.code || error?.errors?.find((entry) => entry.code)?.code || 'UNKNOWN';
   const address = `${target.host}:${target.port}`;
   const suffix = ` [${code}]`;
+  if (['SELF_SIGNED_CERT_IN_CHAIN', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'CERT_HAS_EXPIRED', 'ERR_TLS_CERT_ALTNAME_INVALID'].includes(code)) {
+    return `PostgreSQL TLS certificate verification failed at ${address}. Check the database hostname and configure the provider's trusted CA using sslrootcert with sslmode=verify-full. URL SSL parameters override the pg ssl object. Update the active database URL in Vercel and redeploy.${suffix}`;
+  }
   if (code === 'ECONNREFUSED') {
     return `Cannot connect to PostgreSQL at ${address}. Check that PostgreSQL is running and DB_PORT/PGPORT matches its listening port.${suffix}`;
   }

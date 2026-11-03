@@ -9,6 +9,21 @@ const config=oauthConfig({GOOGLE_CLIENT_ID:'google-test',GOOGLE_CLIENT_SECRET:'s
 const {privateKey}=crypto.generateKeyPairSync('rsa',{modulusLength:2048});
 const attempt={provider_verifier:'a'.repeat(64),nonce:'expected-nonce'};
 const params=new URLSearchParams({code:'provider-code',state:'test-state'});
+
+test('production provider callbacks ignore stale localhost configuration', () => {
+ for (const deployment of [{NODE_ENV:'production'}, {VERCEL:'1'}]) {
+  const settings=oauthConfig({...deployment, OAUTH_PUBLIC_API_URL:'http://localhost:5000', API_BASE_URL:'http://localhost:5000', BACKEND_PUBLIC_URL:'http://localhost:5000'});
+  for (const provider of ['google','github']) {
+   assert.equal(settings.providers[provider].callback, `https://ashwiapi.vercel.app/api/auth/oauth/${provider}/callback`);
+  }
+ }
+});
+
+test('production uses the first valid public API URL and local development retains localhost', () => {
+ assert.equal(oauthConfig({NODE_ENV:'production', OAUTH_PUBLIC_API_URL:'http://localhost:5000', API_BASE_URL:'https://api.example.com/'}).providers.google.callback, 'https://api.example.com/api/auth/oauth/google/callback');
+ assert.equal(oauthConfig({NODE_ENV:'production', OAUTH_PUBLIC_API_URL:'https://oauth.example.com', API_BASE_URL:'https://api.example.com'}).providers.google.callback, 'https://oauth.example.com/api/auth/oauth/google/callback');
+ assert.equal(oauthConfig({PORT:'5000'}).providers.google.callback, 'http://localhost:5000/api/auth/oauth/google/callback');
+});
 function json(value,status=200){return new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});}
 
 test('Google checks token audience/nonce and requires matching verified userinfo subject',async()=>{

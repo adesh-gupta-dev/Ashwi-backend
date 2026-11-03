@@ -1,7 +1,27 @@
 const trim = value => (value || '').trim().replace(/\/+$/, '');
 
+function publicApiUrl(env) {
+  const candidates = [env.OAUTH_PUBLIC_API_URL, env.API_BASE_URL, env.BACKEND_PUBLIC_URL];
+  if (env.NODE_ENV !== 'production' && env.VERCEL !== '1') {
+    return trim(candidates.find(value => value?.trim()) || `http://localhost:${env.PORT || 5000}`);
+  }
+  // Local .env values are sometimes copied into Vercel. Provider callbacks
+  // must return to the deployed broker, never the visitor's localhost.
+  for (const candidate of candidates) {
+    try {
+      const url = new URL(trim(candidate));
+      const host = url.hostname.toLowerCase();
+      if (url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
+        && host !== 'localhost' && !host.endsWith('.localhost') && !host.startsWith('127.') && host !== '[::1]') {
+        return trim(url.href);
+      }
+    } catch { /* Try the next configured public URL. */ }
+  }
+  return 'https://ashwiapi.vercel.app';
+}
+
 export function oauthConfig(env = process.env) {
-  const api = trim(env.OAUTH_PUBLIC_API_URL || env.API_BASE_URL || `http://localhost:${env.PORT || 5000}`);
+  const api = publicApiUrl(env);
   const frontend = trim(env.NODE_ENV === 'production'
     ? 'https://chatwithashwi.vercel.app'
     : env.FRONTEND_PUBLIC_URL || env.CLIENT_URL || 'http://localhost:3000');
